@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Donate - VipherAid{% endblock %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container py-3">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="va-card p-4 p-lg-5 h-100">
+          <h1 class="fw-bold mb-2">Donate to Save Lives</h1>
+          <p class="va-soft mb-4">Supports transport, vet care, shelter and recovery.</p>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-4 rounded-4" style="background: var(--card2); border:1px solid var(--border);">
+                <div class="fw-bold">🚑 Rescue Transport</div>
+                <div class="va-soft">₹300 – ₹1,500</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-4 rounded-4" style="background: var(--card2); border:1px solid var(--border);">
+                <div class="fw-bold">⚕️ Medical Care</div>
+                <div class="va-soft">₹800 – ₹6,000</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-4 rounded-4" style="background: var(--card2); border:1px solid var(--border);">
+                <div class="fw-bold">🏠 Shelter</div>
+                <div class="va-soft">₹300 – ₹1,000/month</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-4 rounded-4" style="background: var(--card2); border:1px solid var(--border);">
+                <div class="fw-bold">🍖 Food</div>
+                <div class="va-soft">₹200 – ₹700/month</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="va-card p-4 p-lg-5">
+          <h3 class="fw-bold mb-3">Scan & Pay</h3>
+          <div class="p-4 rounded-4 text-center" style="background: var(--card2); border:1px solid var(--border);">
+            <div class="fw-bold">UPI ID: charannithi2429@oksbi</div>
+
+            <div class="va-soft small mt-2"></div>
+            <div id="qrcode" class="d-flex justify-content-center my-2"></div>
+            <div class="d-flex justify-content-center gap-2">
+              <button id="copyUpi" class="va-btn-outline small">Copy UPI</button>
+              <button id="refreshQr" class="va-btn-outline small">Refresh QR</button>
+            </div>
+          </div>
+
+          <hr class="opacity-25 my-4">
+
+          <form id="donForm">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Name *</label>
+              <input id="dName" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Email *</label>
+              <input id="dEmail" class="form-control" type="email" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Phone *</label>
+              <input id="dPhone" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Amount (₹) *</label>
+              <input id="dAmt" class="form-control" type="number" min="50" required>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <button type="button" class="va-btn-outline" onclick="dAmt.value=200">₹200</button>
+              <button type="button" class="va-btn-outline" onclick="dAmt.value=500">₹500</button>
+              <button type="button" class="va-btn-outline" onclick="dAmt.value=1000">₹1000</button>
+              <button type="button" class="va-btn-outline" onclick="dAmt.value=2000">₹2000</button>
+            </div>
+
+            <button class="va-btn w-100" type="submit"><i class="fa-solid fa-heart"></i>Save Donation</button>
+          </form>
+
+          <div class="va-soft small mt-3">(Demo) Saves locally in browser.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<!-- QR library (client-side) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+document.getElementById("donForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  const donation = {
+    name: dName.value.trim(),
+    email: dEmail.value.trim(),
+    phone: dPhone.value.trim(),
+    amount: Number(dAmt.value),
+    createdAt: new Date().toISOString()
+  };
+  const list = JSON.parse(localStorage.getItem("vipheraid_donations") || "[]");
+  list.unshift(donation);
+  localStorage.setItem("vipheraid_donations", JSON.stringify(list));
+  alert("Donation info saved. Thank you!");
+  e.target.reset();
+  renderQr();
+});
+
+// UPI details
+const UPI_ID = 'charannithi2429@oksbi';
+const UPI_PNAME = 'VipherAid';
+
+function buildUpiLink(amount){
+  let link = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_PNAME)}&cu=INR`;
+  if(amount && Number(amount) > 0) link += `&am=${encodeURIComponent(Number(amount).toFixed(2))}`;
+  return link;
+}
+
+let qr;
+function renderQr(){
+  const amt = Number(dAmt.value) || 0;
+  const text = buildUpiLink(amt);
+  const container = document.getElementById('qrcode');
+  container.innerHTML = '';
+  qr = new QRCode(container, { text, width: 180, height: 180 });
+}
+
+// initial render
+renderQr();
+
+// update QR when amount changes
+document.getElementById('dAmt').addEventListener('input', ()=>{
+  renderQr();
+});
+
+// copy UPI link to clipboard
+document.getElementById('copyUpi').addEventListener('click', async ()=>{
+  const amt = Number(dAmt.value) || 0;
+  const upi = buildUpiLink(amt);
+  try{ await navigator.clipboard.writeText(upi); alert('UPI link copied'); }
+  catch(e){ prompt('Copy UPI link', upi); }
+});
+
+// refresh QR manually
+document.getElementById('refreshQr').addEventListener('click', renderQr);
+</script>
+{% endblock %}

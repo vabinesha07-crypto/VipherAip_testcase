@@ -1,0 +1,497 @@
+{% extends "base.html" %}
+{% block title %}Emergency Call — VipherAid{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- HEADER -->
+  <div class="text-center mb-4 animate-up">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(220,38,38,0.10);border:1.5px solid rgba(220,38,38,0.22);border-radius:999px;padding:6px 18px;margin-bottom:20px;">
+      <span class="live-dot" style="background:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,0.22);"></span>
+      <span style="font-size:0.78rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#991b1b;">Emergency Line Active</span>
+    </div>
+    <h1 style="font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-0.03em;margin-bottom:14px;">
+      Animal in Danger?<br>
+      <span style="background:linear-gradient(135deg,#dc2626,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">One tap. Direct call. Instant help.</span>
+    </h1>
+    <p style="color:var(--muted);font-size:1.05rem;max-width:520px;margin:0 auto;">
+      Tap the red button — it <strong>immediately dials 77085 47688</strong>. GPS is captured in real-time and shared with the rescue team.
+    </p>
+  </div>
+
+  <!-- STEP TRACKER -->
+  <div class="d-flex justify-content-center mb-5 animate-up delay-1">
+    <div style="display:flex;align-items:center;background:white;border:1px solid var(--border);border-radius:999px;padding:5px 8px;box-shadow:var(--shadow-sm);flex-wrap:wrap;gap:4px;">
+      <div id="step1dot" style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,#dc2626,#ef4444);color:white;font-size:0.76rem;font-weight:800;">1 Call</div>
+      <div style="width:24px;height:2px;background:var(--border);border-radius:1px;"></div>
+      <div id="step2dot" style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:999px;color:var(--muted);font-size:0.76rem;font-weight:700;">2 Photo</div>
+      <div style="width:24px;height:2px;background:var(--border);border-radius:1px;"></div>
+      <div id="step3dot" style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:999px;color:var(--muted);font-size:0.76rem;font-weight:700;">3 Your Info</div>
+      <div style="width:24px;height:2px;background:var(--border);border-radius:1px;"></div>
+      <div id="step4dot" style="display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:999px;color:var(--muted);font-size:0.76rem;font-weight:700;">4 Done</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: CALL + GPS -->
+  <div id="s1">
+    <div class="row g-4 align-items-stretch justify-content-center mb-4">
+
+      <!-- CALL BUTTON -->
+      <div class="col-lg-5 text-center animate-up delay-1">
+        <div class="va-card p-5" style="border:none;box-shadow:var(--shadow-lg);background:linear-gradient(145deg,#fff,#fff5f5);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+
+          <div style="position:relative;display:inline-block;margin-bottom:32px;">
+            <div style="position:absolute;inset:-16px;border-radius:50%;border:2.5px solid rgba(220,38,38,0.22);animation:pulseRing 2s ease-out infinite;pointer-events:none;"></div>
+            <div style="position:absolute;inset:-30px;border-radius:50%;border:2px solid rgba(220,38,38,0.12);animation:pulseRing 2s ease-out 0.68s infinite;pointer-events:none;"></div>
+            <div style="position:absolute;inset:-44px;border-radius:50%;border:1.5px solid rgba(220,38,38,0.06);animation:pulseRing 2s ease-out 1.36s infinite;pointer-events:none;"></div>
+            <button id="callBtn" onclick="doCall()"
+               style="width:172px;height:172px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#ef4444);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;border:none;box-shadow:0 20px 56px rgba(220,38,38,0.52);cursor:pointer;transition:transform 0.15s;"
+               onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'"
+               ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)'">
+              <span style="font-size:3.6rem;line-height:1;animation:phoneRing 1.8s ease-in-out infinite;display:inline-block;">📞</span>
+              <span style="font-size:0.82rem;font-weight:900;letter-spacing:0.07em;text-transform:uppercase;margin-top:10px;">TAP TO CALL</span>
+            </button>
+          </div>
+
+          <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:900;margin-bottom:4px;">Emergency Hotline</div>
+          <div style="font-size:1.7rem;font-weight:900;color:#dc2626;letter-spacing:0.05em;margin-bottom:6px;">77085 47688</div>
+          <div style="color:var(--muted);font-size:0.86rem;margin-bottom:24px;">24 × 7 · Immediate response</div>
+
+          <div style="width:100%;height:1px;background:var(--border);margin-bottom:20px;"></div>
+          <a id="waLink" href="https://wa.me/917708547688?text=EMERGENCY%3A+Animal+needs+help" target="_blank"
+             class="va-btn-outline" style="width:100%;justify-content:center;font-size:0.9rem;padding:12px 20px;">
+            💬 WhatsApp Instead
+          </a>
+
+          <div id="calledStrip" style="display:none;margin-top:16px;width:100%;background:rgba(22,163,74,0.10);border:1.5px solid rgba(22,163,74,0.24);border-radius:12px;padding:14px 16px;text-align:center;">
+            <div style="font-weight:800;color:#15803d;font-size:0.9rem;">📞 Call initiated!</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Keep talking — upload a photo next.</div>
+            <button onclick="goToStep(2)" class="va-btn" style="margin-top:12px;padding:10px 24px;font-size:0.88rem;width:100%;">
+              Continue → Upload Photo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPS + MAP -->
+      <div class="col-lg-5 animate-up delay-2">
+        <div class="va-card p-4" style="border:none;box-shadow:var(--shadow-lg);height:100%;display:flex;flex-direction:column;">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--grad-teal);display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:var(--shadow-teal);">📍</div>
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;">Your Live Location</div>
+              <div style="font-size:0.76rem;color:var(--muted);">Real-time GPS · Sent to rescue team</div>
+            </div>
+            <span id="gpsStatus" class="ms-auto tech-pill amber" style="font-size:0.68rem;">Detecting…</span>
+          </div>
+          <div style="background:var(--card2);border-radius:12px;padding:12px 16px;border:1px solid var(--border);margin-bottom:12px;">
+            <div style="font-size:0.7rem;font-weight:700;color:var(--muted);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;">GPS Coordinates</div>
+            <div style="font-family:monospace;font-size:1rem;font-weight:800;color:var(--teal);" id="coordDisplay">Acquiring signal…</div>
+            <div style="font-size:0.76rem;color:var(--muted);margin-top:2px;" id="accuracyDisplay">Accuracy: —</div>
+          </div>
+          <div style="flex:1;min-height:200px;border-radius:14px;overflow:hidden;border:1.5px solid rgba(13,148,136,0.22);position:relative;" id="mapWrap">
+            <div id="mapSpinner" style="position:absolute;inset:0;background:linear-gradient(145deg,#e6f7f5,#f0fef9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:2;">
+              <div style="width:44px;height:44px;border-radius:50%;border:3px solid var(--teal2);border-top-color:transparent;animation:spinRing 0.9s linear infinite;"></div>
+              <div style="font-size:0.82rem;font-weight:700;color:var(--teal);">Getting your location…</div>
+            </div>
+            <iframe id="mapIframe" style="width:100%;height:100%;min-height:200px;border:none;display:none;" title="Your location"></iframe>
+          </div>
+          <div class="d-flex gap-2 mt-3">
+            <button onclick="getLocation()" class="va-btn-outline" style="flex:1;justify-content:center;font-size:0.84rem;padding:10px;">🔄 Refresh GPS</button>
+            <button onclick="openMaps()" id="mapsBtn" disabled class="va-btn va-btn-teal" style="flex:1;justify-content:center;font-size:0.84rem;padding:10px;">🧭 Navigate Here</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="row g-3 mt-2">
+      <div class="col-md-4">
+        <div style="background:rgba(220,38,38,0.06);border:1.5px solid rgba(220,38,38,0.14);border-radius:16px;padding:20px;">
+          <div style="font-size:1.5rem;margin-bottom:8px;">📞</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.92rem;margin-bottom:5px;">1. Call Us</div>
+          <div style="color:var(--muted);font-size:0.84rem;line-height:1.6;">Tap the red button — directly dials 77085 47688. No menus, no hold music.</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div style="background:rgba(245,158,11,0.08);border:1.5px solid rgba(245,158,11,0.20);border-radius:16px;padding:20px;">
+          <div style="font-size:1.5rem;margin-bottom:8px;">📍</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.92rem;margin-bottom:5px;">2. GPS Shared</div>
+          <div style="color:var(--muted);font-size:0.84rem;line-height:1.6;">Real GPS coordinates auto-captured and shown on live map for rescuers.</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div style="background:rgba(13,148,136,0.07);border:1.5px solid rgba(13,148,136,0.18);border-radius:16px;padding:20px;">
+          <div style="font-size:1.5rem;margin-bottom:8px;">🚑</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.92rem;margin-bottom:5px;">3. Help Arrives</div>
+          <div style="color:var(--muted);font-size:0.84rem;line-height:1.6;">Rescuer gets turn-by-turn Google Maps navigation to the exact spot.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: PHOTO -->
+  <div id="s2" style="display:none;">
+    <div class="va-card p-4 p-lg-5 mb-4" style="border:none;box-shadow:var(--shadow-lg);border-top:3px solid var(--amber);">
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <div style="width:42px;height:42px;border-radius:12px;background:var(--grad-brand);display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 4px 14px rgba(245,158,11,0.28);">📸</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;">Upload Photo of the Animal</div>
+          <div style="color:var(--muted);font-size:0.82rem;">Auto-detected and cropped · Attached to your rescue case</div>
+        </div>
+        <span id="aiStatusBadge" class="ms-auto badge-soft" style="display:none;"></span>
+      </div>
+
+      <div id="dropZone"
+           onclick="document.getElementById('photoInput').click()"
+           ondragover="event.preventDefault();this.style.borderColor='var(--amber)';this.style.background='rgba(245,158,11,0.06)'"
+           ondragleave="this.style.borderColor='rgba(245,158,11,0.38)';this.style.background=''"
+           ondrop="handleDrop(event)"
+           style="border:2.5px dashed rgba(245,158,11,0.38);border-radius:18px;padding:40px 20px;text-align:center;background:linear-gradient(145deg,#fffdf7,#fff);cursor:pointer;transition:all 0.2s;">
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoSelect(this.files[0])">
+        <div id="photoPreviewWrap">
+          <div style="font-size:3rem;margin-bottom:10px;">🐾</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;margin-bottom:6px;">Tap to open camera or gallery</div>
+          <div style="font-size:0.85rem;color:var(--muted);">Photo helps rescuers identify the animal faster</div>
+          <div class="d-flex gap-2 justify-content-center mt-3">
+            <span class="tech-pill amber" style="font-size:0.7rem;">🔍 Animal detection</span>
+            <span class="tech-pill teal" style="font-size:0.7rem;">✂️ Auto-crop</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="aiStatusMsg" style="display:none;margin-top:14px;"></div>
+
+      <div class="d-flex gap-2 mt-3" id="photoActionBtns" style="display:none;">
+        <button onclick="useAnyway()" id="useAnywayBtn" class="va-btn-outline" style="display:none;font-size:0.88rem;padding:9px 18px;">⏭ Use Anyway</button>
+        <button onclick="removePhoto()" class="va-btn-outline" style="font-size:0.88rem;padding:9px 18px;border-color:rgba(220,38,38,0.25);color:#dc2626;">✕ Remove</button>
+      </div>
+
+      <div class="d-flex gap-3 mt-4 flex-wrap">
+        <button onclick="goToStep(3)" id="photoNextBtn" class="va-btn" style="padding:14px 32px;font-size:1rem;" disabled>
+          Continue → Your Details
+        </button>
+        <button onclick="skipPhoto()" class="va-btn-outline" style="padding:14px 24px;">Skip Photo →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: REPORTER DETAILS (ONLY NAME + PHONE) -->
+  <div id="s3" style="display:none;">
+    <div class="va-card p-4 p-lg-5 mb-4" style="border:none;box-shadow:var(--shadow-lg);border-top:3px solid var(--teal2);">
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <div style="width:42px;height:42px;border-radius:12px;background:var(--grad-teal);display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:var(--shadow-teal);">👤</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;">Your Name &amp; Phone</div>
+          <div style="color:var(--muted);font-size:0.82rem;">So rescuers can call you back</div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Your Name</label>
+          <input id="rName" class="form-control" placeholder="e.g. Priya Kumar" autocomplete="name">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Mobile Number <span style="color:#dc2626;">*</span></label>
+          <input id="rPhone" class="form-control" type="tel" placeholder="e.g. 9876543210" autocomplete="tel">
+          <div style="font-size:0.76rem;color:var(--muted);margin-top:4px;">We may call you for exact spot directions</div>
+        </div>
+      </div>
+
+      <div id="submitError" style="display:none;margin-top:14px;padding:12px 16px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.22);border-radius:10px;font-size:0.88rem;color:#991b1b;"></div>
+
+      <div class="d-flex gap-3 mt-4 flex-wrap">
+        <button onclick="submitEmergencyReport()" id="submitBtn" class="va-btn-emergency" style="padding:15px 36px;font-size:1rem;border-radius:14px;animation:none;border:none;cursor:pointer;">
+          🚨 Send Emergency Report
+        </button>
+        <button onclick="goToStep(2)" class="va-btn-outline" style="padding:14px 20px;">← Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: SUCCESS -->
+  <div id="s4" style="display:none;">
+    <div class="va-card p-5 text-center" style="border:none;box-shadow:var(--shadow-lg);background:linear-gradient(145deg,#f0fdf4,#fff);border-top:3px solid #16a34a;">
+      <div style="font-size:4.5rem;margin-bottom:16px;animation:float 2.5s ease-in-out infinite;display:inline-block;">✅</div>
+      <h2 style="font-family:'Syne',sans-serif;font-weight:900;color:#15803d;margin-bottom:10px;">Emergency Report Sent!</h2>
+      <p style="color:var(--muted);font-size:1rem;max-width:440px;margin:0 auto 6px;">
+        Case ID: <strong id="caseIdDisplay" style="color:var(--teal);">—</strong>
+      </p>
+      <p style="color:var(--muted);font-size:0.9rem;max-width:440px;margin:0 auto 24px;">
+        Your report is live on the rescue dashboard. An NGO will accept it and call you back shortly.
+      </p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="/rescue" class="va-btn va-btn-teal" style="text-decoration:none;padding:13px 28px;">📋 View Rescue Dashboard</a>
+        <button onclick="resetAll()" class="va-btn-outline" style="padding:13px 24px;">+ New Emergency</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+@keyframes pulseRing {
+  0%   { opacity:0.85; transform:scale(0.95); }
+  100% { opacity:0;    transform:scale(1.32); }
+}
+@keyframes phoneRing {
+  0%,58%,100% { transform:rotate(0deg); }
+  8%  { transform:rotate(-15deg) scale(1.07); }
+  18% { transform:rotate(15deg)  scale(1.07); }
+  28% { transform:rotate(-11deg); }
+  38% { transform:rotate(10deg); }
+  48% { transform:rotate(-4deg); }
+}
+@keyframes spinRing { to { transform:rotate(360deg); } }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+</style>
+
+<script>
+var gpsCoords = null;
+var photoBlob = null;
+const PHONE = '917708547688';
+
+/* ══ STEPS ═════════════════════════════════════════════════ */
+function goToStep(n) {
+  for (var i=1;i<=4;i++) {
+    var el = document.getElementById('s'+i);
+    if (el) el.style.display = (i===n) ? 'block' : 'none';
+    var dot = document.getElementById('step'+i+'dot');
+    if (!dot) continue;
+    if (i < n) {
+      dot.style.background='rgba(22,163,74,0.15)'; dot.style.color='#15803d';
+    } else if (i===n) {
+      dot.style.background='linear-gradient(135deg,#dc2626,#ef4444)'; dot.style.color='white';
+    } else {
+      dot.style.background='transparent'; dot.style.color='var(--muted)';
+    }
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ══ CALL ══════════════════════════════════════════════════ */
+function doCall() {
+  window.location.href = 'tel:+'+PHONE;
+  setTimeout(function() {
+    document.getElementById('calledStrip').style.display = 'block';
+    var d = document.getElementById('step1dot');
+    d.style.background='rgba(22,163,74,0.15)'; d.style.color='#15803d';
+  }, 900);
+}
+
+/* ══ GPS ════════════════════════════════════════════════════ */
+function getLocation() {
+  document.getElementById('gpsStatus').textContent='Detecting…';
+  document.getElementById('gpsStatus').className='ms-auto tech-pill amber';
+  document.getElementById('coordDisplay').textContent='Acquiring signal…';
+  document.getElementById('accuracyDisplay').textContent='Accuracy: —';
+  document.getElementById('mapSpinner').style.display='flex';
+  document.getElementById('mapIframe').style.display='none';
+  document.getElementById('mapsBtn').disabled=true;
+
+  if (!navigator.geolocation) {
+    document.getElementById('coordDisplay').textContent='Geolocation not supported';
+    document.getElementById('gpsStatus').textContent='✗ N/A';
+    document.getElementById('gpsStatus').className='ms-auto tech-pill red';
+    document.getElementById('mapSpinner').style.display='none';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      var lat = pos.coords.latitude;
+      var lng = pos.coords.longitude;
+      var acc = Math.round(pos.coords.accuracy);
+      gpsCoords = {lat:lat, lng:lng, acc:acc};
+
+      document.getElementById('coordDisplay').textContent = lat.toFixed(6) + ',  ' + lng.toFixed(6);
+      document.getElementById('accuracyDisplay').textContent = 'Accuracy: ±' + acc + ' metres';
+      document.getElementById('gpsStatus').textContent = '✓ GPS Fixed';
+      document.getElementById('gpsStatus').className = 'ms-auto tech-pill green';
+      document.getElementById('mapsBtn').disabled = false;
+
+      var d = 0.002;
+      var bbox = (lng-d)+','+(lat-d)+','+(lng+d)+','+(lat+d);
+      var src = 'https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+lat+','+lng;
+      var iframe = document.getElementById('mapIframe');
+      iframe.src = src;
+      iframe.onload = function() {
+        iframe.style.display = 'block';
+        document.getElementById('mapSpinner').style.display = 'none';
+      };
+
+      var wa = document.getElementById('waLink');
+      if (wa) wa.href = 'https://wa.me/917708547688?text=EMERGENCY%3A+Animal+needs+help.+Location%3A+https%3A%2F%2Fmaps.google.com%2F%3Fq%3D'+lat+'%2C'+lng;
+    },
+    function(err) {
+      var msgs = {1:'Permission denied — allow location',2:'Position unavailable',3:'Timeout — tap Refresh GPS'};
+      document.getElementById('coordDisplay').textContent = msgs[err.code]||'Error';
+      document.getElementById('gpsStatus').textContent = '✗ Failed';
+      document.getElementById('gpsStatus').className = 'ms-auto tech-pill red';
+      document.getElementById('mapSpinner').style.display = 'none';
+    },
+    {enableHighAccuracy:true, timeout:15000, maximumAge:0}
+  );
+}
+
+function openMaps() {
+  if (!gpsCoords) return;
+  window.open('https://www.google.com/maps/dir/?api=1&destination='+gpsCoords.lat+','+gpsCoords.lng+'&travelmode=driving','_blank');
+}
+
+window.addEventListener('DOMContentLoaded', getLocation);
+
+/* ══ PHOTO DETECTION ═══════════════════════════════════════ */
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').style.borderColor='rgba(245,158,11,0.38)';
+  document.getElementById('dropZone').style.background='';
+  var file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handlePhotoSelect(file);
+}
+
+function handlePhotoSelect(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() { runDetection(img, file, ev.target.result); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function runDetection(imgEl, originalFile, dataUrl) {
+  document.getElementById('photoPreviewWrap').innerHTML = '<img src="'+dataUrl+'" style="max-width:100%;max-height:260px;border-radius:14px;object-fit:contain;">';
+  document.getElementById('photoActionBtns').style.display = 'flex';
+
+  var statusEl = document.getElementById('aiStatusMsg');
+  var badgeEl  = document.getElementById('aiStatusBadge');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.20);border-radius:12px;"><div style="width:18px;height:18px;border-radius:50%;border:2.5px solid var(--amber);border-top-color:transparent;animation:spinRing 0.8s linear infinite;flex-shrink:0;"></div><span style="font-size:0.88rem;font-weight:600;color:var(--muted);">Checking for animal…</span></div>';
+  document.getElementById('useAnywayBtn').style.display='none';
+  document.getElementById('photoNextBtn').disabled=true;
+
+  var canvas = document.createElement('canvas');
+  canvas.width=imgEl.naturalWidth; canvas.height=imgEl.naturalHeight;
+  canvas.getContext('2d').drawImage(imgEl,0,0);
+  var b64 = canvas.toDataURL('image/jpeg',0.82).split(',')[1];
+
+  try {
+    var res  = await fetch('/api/detect-animal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:b64})});
+    var data = await res.json();
+
+    if (data.isAnimal) {
+      var blob = originalFile;
+      if (data.bbox) {
+        var pad=0.08,iw=canvas.width,ih=canvas.height;
+        var cx=Math.max(0,(data.bbox.x-pad)*iw);
+        var cy=Math.max(0,(data.bbox.y-pad)*ih);
+        var cw=Math.min(iw-cx,(data.bbox.width+2*pad)*iw);
+        var ch=Math.min(ih-cy,(data.bbox.height+2*pad)*ih);
+        var crop=document.createElement('canvas');
+        crop.width=cw; crop.height=ch;
+        crop.getContext('2d').drawImage(canvas,cx,cy,cw,ch,0,0,cw,ch);
+        document.getElementById('photoPreviewWrap').innerHTML='<div style="position:relative;display:inline-block;"><img src="'+crop.toDataURL()+'" style="max-width:100%;max-height:260px;border-radius:14px;object-fit:contain;border:3px solid var(--teal2);"><div style="position:absolute;top:8px;right:8px;background:var(--teal);color:white;font-size:0.68rem;font-weight:800;padding:3px 10px;border-radius:6px;">✂️ Auto-cropped</div></div>';
+        blob = await new Promise(function(r){crop.toBlob(r,'image/jpeg',0.92);});
+      }
+      photoBlob=blob;
+      badgeEl.textContent='✓ '+(data.animalType||'Animal')+' detected';
+      badgeEl.style.cssText='display:inline-flex;background:rgba(13,148,136,0.12);border:1px solid rgba(13,148,136,0.28);color:var(--teal);';
+      statusEl.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(13,148,136,0.08);border:1.5px solid rgba(13,148,136,0.20);border-radius:12px;"><span style="font-size:1.2rem;">✅</span><div style="font-weight:800;color:var(--teal);">'+(data.animalType||'Animal')+' detected'+(data.bbox?' · Cropped':'')+' — photo ready!</div></div>';
+      document.getElementById('photoNextBtn').disabled=false;
+    } else {
+      photoBlob=null;
+      badgeEl.textContent='⚠ Not detected';
+      badgeEl.style.cssText='display:inline-flex;background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.22);color:#991b1b;';
+      statusEl.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(220,38,38,0.07);border:1.5px solid rgba(220,38,38,0.18);border-radius:12px;"><span style="font-size:1.2rem;">⚠️</span><div style="font-weight:800;color:#991b1b;">No animal detected'+(data.detectedAs?' — looks like: '+data.detectedAs:'')+'. Upload clearer photo or tap "Use Anyway".</div></div>';
+      document.getElementById('useAnywayBtn').style.display='inline-flex';
+    }
+  } catch(e) {
+    photoBlob=originalFile;
+    statusEl.innerHTML='<div style="padding:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.18);border-radius:10px;font-size:0.85rem;color:var(--muted);">⚠️ Detection unavailable — photo accepted.</div>';
+    document.getElementById('photoNextBtn').disabled=false;
+  }
+}
+
+function useAnyway() {
+  photoBlob=document.getElementById('photoInput').files[0];
+  document.getElementById('useAnywayBtn').style.display='none';
+  document.getElementById('photoNextBtn').disabled=false;
+  document.getElementById('aiStatusMsg').innerHTML='<div style="padding:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.18);border-radius:10px;font-size:0.85rem;color:var(--muted);">Photo accepted without AI check.</div>';
+}
+
+function removePhoto() {
+  photoBlob=null;
+  document.getElementById('photoInput').value='';
+  document.getElementById('photoPreviewWrap').innerHTML='<div style="font-size:3rem;margin-bottom:10px;">🐾</div><div style="font-family:\'Syne\',sans-serif;font-weight:800;font-size:1rem;margin-bottom:6px;">Tap to open camera or gallery</div><div style="font-size:0.85rem;color:var(--muted);">Photo helps rescuers identify the animal faster</div><div class="d-flex gap-2 justify-content-center mt-3"><span class="tech-pill amber" style="font-size:0.7rem;">🔍 Animal detection</span><span class="tech-pill teal" style="font-size:0.7rem;">✂️ Auto-crop</span></div>';
+  document.getElementById('aiStatusMsg').style.display='none';
+  document.getElementById('aiStatusBadge').style.display='none';
+  document.getElementById('photoActionBtns').style.display='none';
+  document.getElementById('photoNextBtn').disabled=true;
+}
+
+function skipPhoto() { photoBlob=null; goToStep(3); }
+
+/* ══ SUBMIT (SIMPLIFIED: ONLY NAME + PHONE REQUIRED) ═══════ */
+async function submitEmergencyReport() {
+  var name  = document.getElementById('rName').value.trim();
+  var phone = document.getElementById('rPhone').value.trim();
+  var errEl = document.getElementById('submitError');
+
+  if (!phone) {
+    errEl.textContent='⚠️ Mobile number is required — rescuers need to call you back.';
+    errEl.style.display='block';
+    document.getElementById('rPhone').focus();
+    return;
+  }
+  errEl.style.display='none';
+
+  var btn = document.getElementById('submitBtn');
+  btn.textContent='Sending…';
+  btn.disabled=true;
+
+  var geoStr = gpsCoords ? gpsCoords.lat.toFixed(6)+','+gpsCoords.lng.toFixed(6) : '';
+
+  var fd = new FormData();
+  fd.append('animalType', 'Unknown');
+  fd.append('urgency', 'Critical');
+  fd.append('locationText', gpsCoords ? ('GPS: '+gpsCoords.lat.toFixed(5)+', '+gpsCoords.lng.toFixed(5)) : 'Location not captured');
+  fd.append('geo', geoStr);
+  fd.append('description', '[EMERGENCY CALL] Report submitted via one-tap emergency form.');
+  fd.append('reporterName', name || 'Emergency Caller');
+  fd.append('reporterPhone', phone);
+  fd.append('isEmergency', 'true');
+  if (photoBlob) fd.append('photo', photoBlob, 'emergency_photo.jpg');
+
+  try {
+    var res  = await fetch('/api/report',{method:'POST',body:fd});
+    var data = await res.json();
+    if (data.success) {
+      document.getElementById('caseIdDisplay').textContent=data.id;
+      goToStep(4);
+    } else {
+      errEl.textContent='❌ Submit failed. Try again.';
+      errEl.style.display='block';
+      btn.textContent='🚨 Send Emergency Report';
+      btn.disabled=false;
+    }
+  } catch(e) {
+    errEl.textContent='❌ Network error. Check connection.';
+    errEl.style.display='block';
+    btn.textContent='🚨 Send Emergency Report';
+    btn.disabled=false;
+  }
+}
+
+function resetAll() {
+  gpsCoords=null; photoBlob=null;
+  goToStep(1);
+  removePhoto();
+  ['rName','rPhone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('calledStrip').style.display='none';
+  getLocation();
+}
+</script>
+{% endblock %}

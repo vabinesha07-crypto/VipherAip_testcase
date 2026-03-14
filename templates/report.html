@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Report - VipherAid{% endblock %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container py-3">
+    <div class="va-card p-4 p-lg-5">
+      <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div>
+          <h1 class="fw-bold mb-1">Report an Animal in Distress</h1>
+          <p class="va-soft mb-0">Fill this form. The case appears on Rescue Dashboard immediately.</p>
+        </div>
+        <a class="va-btn-outline" href="/rescue"><i class="fa-solid fa-list-check"></i>View Dashboard</a>
+      </div>
+
+      <form id="reportForm" enctype="multipart/form-data">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Animal Type *</label>
+            <select id="animalType" class="form-select" required>
+              <option value="">Select</option>
+              <option>Dog</option><option>Cat</option><option>Bird</option><option>Cow</option>
+              <option>Goat</option><option>Rabbit</option><option>Other</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Urgency *</label>
+            <select id="urgency" class="form-select" required>
+              <option value="">Select</option>
+              <option value="Critical">🔴 Critical</option>
+              <option value="High">🟠 High</option>
+              <option value="Medium">🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label fw-bold">Landmark / Address *</label>
+            <input id="locationText" class="form-control" placeholder="Example: Near Bus Stop, MG Road" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">GPS (optional)</label>
+            <div class="d-flex gap-2">
+              <input id="geo" class="form-control" placeholder="Lat, Long" readonly>
+              <button type="button" class="va-btn-outline" id="btnGeo"><i class="fa-solid fa-location-dot"></i></button>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold">Description *</label>
+            <textarea id="description" class="form-control" rows="4" placeholder="Injured? Bleeding? Traffic risk? Behavior?..." required></textarea>
+          </div>
+
+          <!-- PHOTO UPLOAD WITH AI DETECTION -->
+          <div class="col-12">
+            <label class="form-label fw-bold">Photo (optional)</label>
+            <div style="background:var(--card2);padding:20px;border-radius:14px;border:2px dashed var(--border);text-align:center;">
+              <input type="file" id="photoInput" accept="image/*" style="display:none;">
+              <label for="photoInput" style="cursor:pointer;display:block;">
+                <div id="photoPreview" style="min-height:80px;">
+                  <div style="font-size:2.5rem;margin-bottom:8px;">📸</div>
+                  <p style="color:var(--muted);font-weight:600;margin:0;">Click to add animal photo</p>
+                  <p style="color:var(--muted);font-size:0.85rem;margin-top:6px;">🤖 AI verifies it's an animal and crops out background</p>
+                </div>
+              </label>
+              <div id="photoStatus" style="margin-top:12px;display:none;"></div>
+              <button type="button" id="skipAiBtn" style="display:none;margin-top:10px;padding:6px 14px;background:var(--brand);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;">⏭️ Use Photo Anyway</button>
+              <button type="button" id="removePhotoBtn" style="display:none;margin-top:10px;margin-left:8px;padding:6px 14px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-weight:700;cursor:pointer;">✕ Remove</button>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Your Name (optional)</label>
+            <input id="reporterName" class="form-control" placeholder="Your name">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Phone (optional)</label>
+            <input id="reporterPhone" class="form-control" placeholder="+91 XXXXX XXXXX">
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <button class="va-btn-outline" type="reset" id="clearBtn"><i class="fa-solid fa-rotate-left"></i>Clear</button>
+          <button class="va-btn" type="submit" id="submitBtn"><i class="fa-solid fa-paper-plane"></i>Submit Report</button>
+        </div>
+      </form>
+
+      <!-- SUCCESS MESSAGE -->
+      <div id="successMsg" style="display:none;margin-top:20px;padding:20px;background:rgba(20,184,166,0.1);border-radius:12px;border:2px solid var(--teal);">
+        <h3 style="color:var(--teal);font-weight:800;margin-bottom:8px;">✅ Report Submitted!</h3>
+        <p class="va-soft mb-2">Your report has been logged. Case ID: <strong id="caseId">-</strong></p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="/rescue" class="va-btn" style="text-decoration:none;">View in Rescue Dashboard</a>
+          <button onclick="resetForm()" class="va-btn-outline">Submit Another Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let croppedPhotoBlob = null;
+let photoFile = null;
+
+// GPS
+document.getElementById('btnGeo').addEventListener('click', () => {
+  if (!navigator.geolocation) return alert('Geolocation not supported.');
+  navigator.geolocation.getCurrentPosition(
+    pos => { document.getElementById('geo').value = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`; },
+    () => alert('Could not capture location.')
+  );
+});
+
+// ====== AI ANIMAL DETECTION ======
+async function detectAndCropAnimal(imgElement, originalFile) {
+  const statusDiv = document.getElementById('photoStatus');
+  statusDiv.style.display = 'block';
+  statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm" style="color:var(--brand);"></div><span style="margin-left:10px;color:var(--muted);">🤖 AI scanning for animals...</span>';
+
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = imgElement.naturalWidth || imgElement.width;
+    canvas.height = imgElement.naturalHeight || imgElement.height;
+    canvas.getContext('2d').drawImage(imgElement, 0, 0);
+    const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+    const res = await fetch('/api/detect-animal', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({image: base64})
+    });
+    if (!res.ok) throw new Error('API failed');
+    const result = await res.json();
+
+    if (result.isAnimal) {
+      if (result.bbox) {
+        const crop = document.createElement('canvas');
+        const iw = canvas.width, ih = canvas.height, pad = 0.08;
+        const cx = Math.max(0, (result.bbox.x - pad) * iw);
+        const cy = Math.max(0, (result.bbox.y - pad) * ih);
+        const cw = Math.min(iw - cx, (result.bbox.width + 2*pad) * iw);
+        const ch = Math.min(ih - cy, (result.bbox.height + 2*pad) * ih);
+        crop.width = cw; crop.height = ch;
+        crop.getContext('2d').drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
+        document.getElementById('photoPreview').innerHTML = `<img src="${crop.toDataURL()}" style="max-width:100%;max-height:250px;border-radius:10px;border:3px solid var(--teal);"><div style="margin-top:6px;font-size:0.85rem;color:var(--teal);font-weight:700;">✂️ Cropped to animal only</div>`;
+        crop.toBlob(blob => { croppedPhotoBlob = blob; }, 'image/jpeg', 0.9);
+        statusDiv.innerHTML = `<div style="color:var(--teal);font-weight:700;padding:8px 12px;background:rgba(20,184,166,0.1);border-radius:8px;">✓ ${result.animalType||'Animal'} detected & cropped!</div>`;
+        document.getElementById('removePhotoBtn').style.display = 'inline-block';
+        document.getElementById('skipAiBtn').style.display = 'none';
+      } else {
+        croppedPhotoBlob = originalFile;
+        statusDiv.innerHTML = `<div style="color:var(--teal);font-weight:700;padding:8px 12px;background:rgba(20,184,166,0.1);border-radius:8px;">✓ ${result.animalType||'Animal'} detected!</div>`;
+        document.getElementById('removePhotoBtn').style.display = 'inline-block';
+      }
+    } else {
+      croppedPhotoBlob = null;
+      statusDiv.innerHTML = `<div style="color:#ef4444;font-weight:700;padding:8px 12px;background:rgba(239,68,68,0.1);border-radius:8px;">⚠️ No animal detected. ${result.detectedAs?'Looks like: '+result.detectedAs:''}</div>`;
+      document.getElementById('skipAiBtn').style.display = 'inline-block';
+    }
+  } catch(e) {
+    croppedPhotoBlob = originalFile;
+    statusDiv.innerHTML = '<div style="color:var(--brand);font-weight:700;padding:8px 12px;background:rgba(245,158,11,0.1);border-radius:8px;">⚠️ AI unavailable. Photo added without check.</div>';
+    document.getElementById('removePhotoBtn').style.display = 'inline-block';
+  }
+}
+
+document.getElementById('photoInput').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  photoFile = file;
+  croppedPhotoBlob = null;
+  const reader = new FileReader();
+  reader.onload = async function(ev) {
+    const img = new Image();
+    img.onload = async function() {
+      document.getElementById('photoPreview').innerHTML = `<img src="${ev.target.result}" style="max-width:100%;max-height:250px;border-radius:10px;">`;
+      await detectAndCropAnimal(img, file);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('skipAiBtn').addEventListener('click', function() {
+  croppedPhotoBlob = photoFile;
+  document.getElementById('photoStatus').innerHTML = '<div style="color:var(--brand);font-weight:700;padding:8px 12px;background:rgba(245,158,11,0.1);border-radius:8px;">⚠️ Photo added (AI check skipped)</div>';
+  this.style.display = 'none';
+  document.getElementById('removePhotoBtn').style.display = 'inline-block';
+});
+
+document.getElementById('removePhotoBtn').addEventListener('click', function() {
+  croppedPhotoBlob = null; photoFile = null;
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoPreview').innerHTML = `<div style="font-size:2.5rem;margin-bottom:8px;">📸</div><p style="color:var(--muted);font-weight:600;margin:0;">Click to add animal photo</p><p style="color:var(--muted);font-size:0.85rem;margin-top:6px;">🤖 AI verifies it's an animal</p>`;
+  document.getElementById('photoStatus').style.display = 'none';
+  document.getElementById('skipAiBtn').style.display = 'none';
+  this.style.display = 'none';
+});
+
+// FORM SUBMIT
+document.getElementById('reportForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+
+  try {
+    const formData = new FormData();
+    formData.append('animalType', document.getElementById('animalType').value.trim());
+    formData.append('urgency', document.getElementById('urgency').value.trim());
+    formData.append('locationText', document.getElementById('locationText').value.trim());
+    formData.append('geo', document.getElementById('geo').value.trim());
+    formData.append('description', document.getElementById('description').value.trim());
+    formData.append('reporterName', document.getElementById('reporterName').value.trim());
+    formData.append('reporterPhone', document.getElementById('reporterPhone').value.trim());
+    if (croppedPhotoBlob) formData.append('photo', croppedPhotoBlob, 'animal_photo.jpg');
+
+    const res = await fetch('/api/report', {method: 'POST', body: formData});
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('reportForm').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+      document.getElementById('caseId').textContent = data.id;
+    } else {
+      alert('❌ Something went wrong. Please try again.');
+    }
+  } catch(err) {
+    alert('❌ Network error. Try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>Submit Report';
+  }
+});
+
+function resetForm() {
+  document.getElementById('reportForm').reset();
+  document.getElementById('reportForm').style.display = 'block';
+  document.getElementById('successMsg').style.display = 'none';
+  croppedPhotoBlob = null; photoFile = null;
+  document.getElementById('photoPreview').innerHTML = `<div style="font-size:2.5rem;margin-bottom:8px;">📸</div><p style="color:var(--muted);font-weight:600;margin:0;">Click to add animal photo</p>`;
+  document.getElementById('photoStatus').style.display = 'none';
+  document.getElementById('skipAiBtn').style.display = 'none';
+  document.getElementById('removePhotoBtn').style.display = 'none';
+}
+
+document.getElementById('clearBtn').addEventListener('click', function() {
+  croppedPhotoBlob = null; photoFile = null;
+  document.getElementById('photoPreview').innerHTML = `<div style="font-size:2.5rem;margin-bottom:8px;">📸</div><p style="color:var(--muted);font-weight:600;margin:0;">Click to add animal photo</p>`;
+  document.getElementById('photoStatus').style.display = 'none';
+  document.getElementById('skipAiBtn').style.display = 'none';
+  document.getElementById('removePhotoBtn').style.display = 'none';
+});
+</script>
+{% endblock %}
